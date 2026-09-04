@@ -1,0 +1,11 @@
+{
+  "name": "carserv-root",
+  "version": "1.0.0",
+  "description": "CarServ - Vehicle Service Center System Root Runner",
+  "scripts": {
+    "start": "node run_all.js",
+    "dev": "node run_all.js",
+    "backend": "npm start --prefix backend",
+    "frontend": "npm run dev --prefix frontend"
+  }
+}
