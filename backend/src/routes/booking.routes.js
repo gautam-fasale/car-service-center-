@@ -9,6 +9,37 @@ function generateBookingCode() {
   return `CS${randomNum}`;
 }
 
+// Helper to check if a date and slot time is in the past
+function isTimeSlotPassed(bookingDateStr, timeSlotStr) {
+  try {
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    // If selected date is before today
+    if (bookingDateStr < todayStr) {
+      return true;
+    }
+
+    // If selected date is in the future
+    if (bookingDateStr > todayStr) {
+      return false;
+    }
+
+    // If selected date is today, check slot time
+    const [timePart, modifier] = timeSlotStr.split(' ');
+    let [hours, minutes] = timePart.split(':').map(Number);
+    if (modifier === 'PM' && hours < 12) hours += 12;
+    if (modifier === 'AM' && hours === 12) hours = 0;
+
+    const slotDateTime = new Date();
+    slotDateTime.setHours(hours, minutes, 0, 0);
+
+    return now.getTime() >= slotDateTime.getTime();
+  } catch (e) {
+    return false;
+  }
+}
+
 // 1. Create New Booking (Customer)
 router.post('/', verifyToken, async (req, res) => {
   try {
@@ -26,6 +57,24 @@ router.post('/', verifyToken, async (req, res) => {
 
     if (!serviceCenterId || !vehicleId || !bookingDate || !timeSlot) {
       return res.status(400).json({ success: false, message: 'Missing required booking details' });
+    }
+
+    // Restriction check: Cannot book past dates or passed time slots
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
+
+    if (bookingDate < todayStr) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid booking date: You cannot book an appointment for a past date.'
+      });
+    }
+
+    if (isTimeSlotPassed(bookingDate, timeSlot)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid time slot: The ${timeSlot} slot on ${bookingDate} has already passed. Please select an upcoming time slot.`
+      });
     }
 
     const bookingCode = generateBookingCode();
@@ -117,7 +166,6 @@ router.get('/my', verifyToken, async (req, res) => {
 
     const [rows] = await db.query(query, params);
     
-    // Parse selectedServices JSON
     rows.forEach(r => {
       try {
         r.selectedServices = r.SelectedServices ? JSON.parse(r.SelectedServices) : [];
