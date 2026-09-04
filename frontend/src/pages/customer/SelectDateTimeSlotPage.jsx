@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Clock, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import axios from 'axios';
+import { ArrowLeft, Calendar, Clock, ChevronRight, AlertCircle, CheckCircle2, Lock } from 'lucide-react';
 import { useBooking } from '../../context/BookingContext';
 
 // Helper to convert "09:00 AM" / "02:00 PM" into hours and minutes
@@ -35,6 +36,8 @@ export const SelectDateTimeSlotPage = () => {
   const navigate = useNavigate();
   const { bookingDate, setBookingDate, timeSlot, setTimeSlot, selectedCenter } = useBooking();
   const [error, setError] = useState('');
+  const [bookedSlots, setBookedSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
 
   // 1. Generate Available Dates (Starting from Today only - No past dates)
   const dates = useMemo(() => {
@@ -64,7 +67,7 @@ export const SelectDateTimeSlotPage = () => {
     '06:00 PM'
   ];
 
-  // Default date
+  // Active selected date
   const [activeDate, setActiveDate] = useState(() => {
     if (bookingDate && bookingDate >= dates[0].isoDate) {
       return bookingDate;
@@ -72,33 +75,60 @@ export const SelectDateTimeSlotPage = () => {
     return dates[0].isoDate;
   });
 
+  // Fetch already booked slots for this center and activeDate
+  useEffect(() => {
+    const fetchBookedSlots = async () => {
+      if (!selectedCenter?.ServiceCenterID) return;
+      setLoadingSlots(true);
+      try {
+        const res = await axios.get('/api/bookings/booked-slots', {
+          params: {
+            serviceCenterId: selectedCenter.ServiceCenterID,
+            date: activeDate
+          }
+        });
+        if (res.data.success) {
+          setBookedSlots(res.data.bookedSlots || []);
+        }
+      } catch (err) {
+        console.error('Failed to load booked slots:', err);
+      } finally {
+        setLoadingSlots(false);
+      }
+    };
+
+    fetchBookedSlots();
+  }, [activeDate, selectedCenter]);
+
   // Calculate available slots for currently active date
   const slotStatusList = useMemo(() => {
     return allSlots.map((time) => {
       const passed = checkSlotPassed(activeDate, time);
+      const isBooked = bookedSlots.includes(time);
       return {
         time,
         passed,
-        available: !passed
+        isBooked,
+        available: !passed && !isBooked
       };
     });
-  }, [activeDate]);
+  }, [activeDate, bookedSlots]);
 
   // Default active slot
   const [activeSlot, setActiveSlot] = useState(() => {
-    const firstAvailable = slotStatusList.find((s) => !s.passed);
+    const firstAvailable = slotStatusList.find((s) => s.available);
     return firstAvailable ? firstAvailable.time : '';
   });
 
-  // Whenever active date changes, auto-select first non-passed slot
+  // Whenever active date or booked slots change, auto-select first available slot
   useEffect(() => {
-    const available = slotStatusList.find((s) => !s.passed);
-    if (!slotStatusList.find((s) => s.time === activeSlot && !s.passed)) {
+    const available = slotStatusList.find((s) => s.available);
+    if (!slotStatusList.find((s) => s.time === activeSlot && s.available)) {
       setActiveSlot(available ? available.time : '');
     }
   }, [activeDate, slotStatusList]);
 
-  const allPassedToday = activeDate === dates[0].isoDate && slotStatusList.every((s) => s.passed);
+  const allUnavailable = slotStatusList.every((s) => !s.available);
 
   const handleDateChange = (isoDate) => {
     setError('');
@@ -106,6 +136,10 @@ export const SelectDateTimeSlotPage = () => {
   };
 
   const handleSlotClick = (slot) => {
+    if (slot.isBooked) {
+      setError(`The ${slot.time} slot on ${activeDate} is already booked by another customer at this workshop. Please choose another time.`);
+      return;
+    }
     if (slot.passed) {
       setError(`The ${slot.time} slot on ${activeDate} has already passed. Please select an upcoming slot.`);
       return;
@@ -128,6 +162,12 @@ export const SelectDateTimeSlotPage = () => {
 
     if (!activeSlot) {
       setError('Please select an available time slot.');
+      return;
+    }
+
+    const chosenSlotObj = slotStatusList.find((s) => s.time === activeSlot);
+    if (chosenSlotObj?.isBooked) {
+      setError(`This slot (${activeSlot}) has just been booked by another user. Please choose another slot.`);
       return;
     }
 
@@ -155,7 +195,7 @@ export const SelectDateTimeSlotPage = () => {
             </button>
             <div>
               <h2 className="text-xl font-black text-slate-900">Select Date & Time Slot</h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 font-medium">
                 {selectedCenter?.Name || 'Choose your appointment schedule'}
               </p>
             </div>
@@ -185,6 +225,7 @@ export const SelectDateTimeSlotPage = () => {
                 return (
                   <button
                     key={d.isoDate}
+                    type="button"
                     onClick={() => handleDateChange(d.isoDate)}
                     className={`p-3 rounded-2xl flex flex-col items-center justify-center min-w-[62px] transition ${
                       isSelected
@@ -207,45 +248,47 @@ export const SelectDateTimeSlotPage = () => {
             </div>
           </div>
 
-          {/* 2. Time Slots Grid with Real-Time Passed Restriction */}
+          {/* 2. Time Slots Grid with Real-Time Passed & Booked Restrictions */}
           <div>
             <div className="flex items-center justify-between mb-2.5">
               <label className="text-xs font-bold uppercase tracking-wider text-slate-600">
                 2. Available Time Slots
               </label>
               <span className="text-[10px] text-slate-400 font-medium">
-                {activeDate === dates[0].isoDate ? 'Today’s Live Slots' : 'All Slots Open'}
+                {loadingSlots ? 'Checking slot availability...' : 'Live Workshop Schedule'}
               </span>
             </div>
 
-            {allPassedToday ? (
+            {allUnavailable ? (
               <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl text-center space-y-2">
                 <p className="text-xs font-bold text-amber-800">
-                  All service slots for today have completed.
+                  No slots available on this date (all completed or booked).
                 </p>
                 <p className="text-[11px] text-amber-700">
-                  Please choose tomorrow ({dates[1].dayName}, {dates[1].dayNum} {dates[1].monthName}) to book your appointment.
+                  Please choose another upcoming date to book your service appointment.
                 </p>
                 <button
                   type="button"
                   onClick={() => handleDateChange(dates[1].isoDate)}
                   className="px-4 py-1.5 bg-amber-600 text-white text-xs font-bold rounded-xl shadow-sm"
                 >
-                  Switch to Tomorrow
+                  Switch to Next Day
                 </button>
               </div>
             ) : (
               <div className="grid grid-cols-3 gap-2.5">
                 {slotStatusList.map((slot) => {
-                  const isSelected = activeSlot === slot.time && !slot.passed;
+                  const isSelected = activeSlot === slot.time && slot.available;
                   return (
                     <button
                       key={slot.time}
                       type="button"
-                      disabled={slot.passed}
+                      disabled={!slot.available}
                       onClick={() => handleSlotClick(slot)}
                       className={`py-3 px-2 rounded-xl text-xs font-bold transition flex flex-col items-center justify-center gap-1 relative ${
-                        slot.passed
+                        slot.isBooked
+                          ? 'bg-rose-50 text-rose-400 border border-rose-200/80 cursor-not-allowed opacity-75'
+                          : slot.passed
                           ? 'bg-slate-100 text-slate-400 border border-slate-200/60 cursor-not-allowed opacity-60'
                           : isSelected
                           ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30 ring-2 ring-blue-600'
@@ -253,20 +296,30 @@ export const SelectDateTimeSlotPage = () => {
                       }`}
                     >
                       <div className="flex items-center gap-1">
-                        <Clock
-                          className={`w-3 h-3 ${
-                            slot.passed
-                              ? 'text-slate-400'
-                              : isSelected
-                              ? 'text-white'
-                              : 'text-blue-600'
-                          }`}
-                        />
+                        {slot.isBooked ? (
+                          <Lock className="w-3 h-3 text-rose-500" />
+                        ) : (
+                          <Clock
+                            className={`w-3 h-3 ${
+                              slot.passed
+                                ? 'text-slate-400'
+                                : isSelected
+                                ? 'text-white'
+                                : 'text-blue-600'
+                            }`}
+                          />
+                        )}
                         <span>{slot.time}</span>
                       </div>
 
-                      {slot.passed && (
-                        <span className="text-[9px] font-semibold text-rose-500 uppercase tracking-tighter">
+                      {slot.isBooked && (
+                        <span className="text-[9px] font-bold text-rose-600 uppercase tracking-tighter">
+                          Booked
+                        </span>
+                      )}
+
+                      {slot.passed && !slot.isBooked && (
+                        <span className="text-[9px] font-semibold text-slate-500 uppercase tracking-tighter">
                           Passed
                         </span>
                       )}
@@ -289,7 +342,7 @@ export const SelectDateTimeSlotPage = () => {
 
           <button
             onClick={handleNext}
-            disabled={!activeSlot || allPassedToday}
+            disabled={!activeSlot || allUnavailable}
             className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold rounded-xl shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 transition disabled:opacity-40 disabled:cursor-not-allowed text-xs"
           >
             <span>Confirm Schedule & Continue</span>

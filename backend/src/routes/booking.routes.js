@@ -40,6 +40,30 @@ function isTimeSlotPassed(bookingDateStr, timeSlotStr) {
   }
 }
 
+// 0. Get Booked / Occupied Slots for a Service Center on a given date (Public / Customer)
+router.get('/booked-slots', async (req, res) => {
+  try {
+    const db = getPool();
+    const { serviceCenterId, date } = req.query;
+
+    if (!serviceCenterId || !date) {
+      return res.status(400).json({ success: false, message: 'serviceCenterId and date are required' });
+    }
+
+    const [rows] = await db.query(
+      `SELECT TimeSlot FROM bookings 
+       WHERE ServiceCenterID = ? AND BookingDate = ? AND Status != 'Cancelled'`,
+      [serviceCenterId, date]
+    );
+
+    const bookedSlots = rows.map(r => r.TimeSlot);
+    res.json({ success: true, bookedSlots });
+  } catch (err) {
+    console.error('Fetch booked slots error:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch booked slots' });
+  }
+});
+
 // 1. Create New Booking (Customer)
 router.post('/', verifyToken, async (req, res) => {
   try {
@@ -59,7 +83,7 @@ router.post('/', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'Missing required booking details' });
     }
 
-    // Restriction check: Cannot book past dates or passed time slots
+    // 1. Restriction check: Cannot book past dates or passed time slots
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
 
@@ -74,6 +98,20 @@ router.post('/', verifyToken, async (req, res) => {
       return res.status(400).json({
         success: false,
         message: `Invalid time slot: The ${timeSlot} slot on ${bookingDate} has already passed. Please select an upcoming time slot.`
+      });
+    }
+
+    // 2. Restriction check: Slot Collision Prevention (Cannot double-book the same slot at the same center)
+    const [existingBookings] = await db.query(
+      `SELECT BookingID, BookingCode FROM bookings 
+       WHERE ServiceCenterID = ? AND BookingDate = ? AND TimeSlot = ? AND Status != 'Cancelled'`,
+      [serviceCenterId, bookingDate, timeSlot]
+    );
+
+    if (existingBookings.length > 0) {
+      return res.status(409).json({
+        success: false,
+        message: `This time slot (${timeSlot}) on ${bookingDate} is already booked by another customer at this service center. Please select a different time slot.`
       });
     }
 
