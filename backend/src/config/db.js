@@ -44,13 +44,12 @@ async function initDB(forceReseed = false) {
     await pool.query(schemaSQL);
 
     // 4. Check if seed data exists or if forced reseed
-    const [centerRows] = await pool.query('SELECT COUNT(*) as cnt FROM service_centers WHERE Type = "Branded"');
-    const [userRows] = await pool.query('SELECT COUNT(*) as cnt FROM users');
+    const [userRows] = await pool.query('SELECT COUNT(*) as cnt FROM users WHERE UserType = "ServiceCenter"');
     
-    if (userRows[0].cnt === 0 || centerRows[0].cnt > 0 || forceReseed) {
-      console.log('[Database] Populating 5 local service centers & demo data...');
+    if (userRows[0].cnt < 5 || forceReseed) {
+      console.log('[Database] Populating all 5 local partner accounts & demo data...');
       await resetAndSeedDatabase(pool);
-      console.log('[Database] 5 Local Service Centers seeded successfully!');
+      console.log('[Database] 5 Local Service Center Partner accounts seeded successfully!');
     }
 
     return pool;
@@ -61,7 +60,6 @@ async function initDB(forceReseed = false) {
 }
 
 async function resetAndSeedDatabase(db) {
-  // Clear existing records to ensure only 5 local garages exist
   await db.query('SET FOREIGN_KEY_CHECKS = 0;');
   await db.query('TRUNCATE TABLE reviews;');
   await db.query('TRUNCATE TABLE payments;');
@@ -75,16 +73,23 @@ async function resetAndSeedDatabase(db) {
 
   const defaultPassword = await bcrypt.hash('password123', 10);
 
-  // 1. Users
+  // 1. Users (Customers, 5 Local Service Center Partners, and Admin)
   const users = [
+    // Customers
     ['Rohan Sharma', '9876543210', 'rohan@example.com', defaultPassword, 'Customer'],
     ['Amit Patel', '9876543211', 'amit@example.com', defaultPassword, 'Customer'],
     ['Sneha Joshi', '9876543212', 'sneha@example.com', defaultPassword, 'Customer'],
     ['Vikram More', '9876543213', 'vikram@example.com', defaultPassword, 'Customer'],
+
+    // All 5 Local Service Center Partners
     ['Shree Auto Partner', '9876543214', 'shreeauto@example.com', defaultPassword, 'ServiceCenter'],
     ['Om Sai Partner', '9876543215', 'omsai@example.com', defaultPassword, 'ServiceCenter'],
     ['Royal Motors Partner', '9876543216', 'royalmotors@example.com', defaultPassword, 'ServiceCenter'],
-    ['CarServ Admin', '9876543299', 'admin@carserv.com', defaultPassword, 'Admin']
+    ['Ganesh Auto Partner', '9876543217', 'ganeshauto@example.com', defaultPassword, 'ServiceCenter'],
+    ['QuickFix Mobile Partner', '9876543218', 'quickfix@example.com', defaultPassword, 'ServiceCenter'],
+
+    // Super Admin
+    ['CarServ Master Admin', '9876543299', 'admin@carserv.com', defaultPassword, 'Admin']
   ];
 
   for (const u of users) {
@@ -94,12 +99,12 @@ async function resetAndSeedDatabase(db) {
     );
   }
 
-  // Get user IDs
+  // Map user IDs
   const [uRows] = await db.query('SELECT UserID, Email FROM users');
   const userMap = {};
   uRows.forEach(r => { userMap[r.Email] = r.UserID; });
 
-  // 2. 5 Local Service Centers (Only local multi-brand garages & mobile repair)
+  // 2. 5 Local Service Centers linked to their respective partner UserIDs
   const localCenters = [
     [
       userMap['shreeauto@example.com'],
@@ -112,7 +117,7 @@ async function resetAndSeedDatabase(db) {
       18.5074,
       73.8077,
       '1.8 km',
-      '9876543210',
+      '9876543214',
       '08:30 AM - 08:30 PM',
       '01:00 PM - 02:00 PM',
       'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
@@ -132,7 +137,7 @@ async function resetAndSeedDatabase(db) {
       18.5590,
       73.7868,
       '2.4 km',
-      '9876543221',
+      '9876543215',
       '09:00 AM - 08:00 PM',
       '01:00 PM - 02:00 PM',
       'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
@@ -152,7 +157,7 @@ async function resetAndSeedDatabase(db) {
       18.5987,
       73.7689,
       '2.1 km',
-      '9876543220',
+      '9876543216',
       '09:00 AM - 07:30 PM',
       '01:00 PM - 02:00 PM',
       'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
@@ -162,7 +167,7 @@ async function resetAndSeedDatabase(db) {
       'https://images.unsplash.com/photo-1613214149922-f1809c99b414?w=800&auto=format&fit=crop&q=80'
     ],
     [
-      null,
+      userMap['ganeshauto@example.com'],
       'Ganesh Auto Repairs & Service Point',
       'Non-Branded',
       'All Multi-Brand',
@@ -172,7 +177,7 @@ async function resetAndSeedDatabase(db) {
       18.4912,
       73.8180,
       '3.0 km',
-      '9876543223',
+      '9876543217',
       '09:00 AM - 08:00 PM',
       '01:00 PM - 02:00 PM',
       'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday',
@@ -182,7 +187,7 @@ async function resetAndSeedDatabase(db) {
       'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&auto=format&fit=crop&q=80'
     ],
     [
-      null,
+      userMap['quickfix@example.com'],
       'QuickFix Local Mobile Garage (Doorstep)',
       'Mobile',
       'All Multi-Brand',
@@ -192,7 +197,7 @@ async function resetAndSeedDatabase(db) {
       18.5204,
       73.8567,
       'Doorstep Van',
-      '9876543222',
+      '9876543218',
       '08:00 AM - 09:00 PM',
       '01:30 PM - 02:30 PM',
       'Monday,Tuesday,Wednesday,Thursday,Friday,Saturday,Sunday',
@@ -211,7 +216,7 @@ async function resetAndSeedDatabase(db) {
     );
   }
 
-  // 3. Services Catalog for each local service center
+  // 3. Services Catalog for all 5 centers
   const [cRows] = await db.query('SELECT ServiceCenterID, Name FROM service_centers');
   
   const standardServices = [
@@ -269,7 +274,7 @@ async function resetAndSeedDatabase(db) {
         { name: 'General Service & Tune-Up', price: 1299 },
         { name: 'Engine Oil & Filter Change', price: 649 }
       ]),
-      date: '2026-08-25',
+      date: '2026-09-08',
       slot: '03:00 PM',
       status: 'Upcoming',
       total: 1948.00,
@@ -282,7 +287,7 @@ async function resetAndSeedDatabase(db) {
       centerId: omSaiCenter.ServiceCenterID,
       serviceId: sRows[1].ServiceID,
       selected: JSON.stringify([{ name: 'Engine Oil & Filter Change', price: 649 }]),
-      date: '2026-08-20',
+      date: '2026-09-09',
       slot: '01:00 PM',
       status: 'Upcoming',
       total: 649.00,
@@ -295,24 +300,11 @@ async function resetAndSeedDatabase(db) {
       centerId: royalCenter.ServiceCenterID,
       serviceId: sRows[3].ServiceID,
       selected: JSON.stringify([{ name: 'Car AC Cooling & Filter Service', price: 1099 }]),
-      date: '2026-08-18',
+      date: '2026-09-02',
       slot: '04:00 PM',
       status: 'Completed',
       total: 1099.00,
       notes: 'AC cooling is running perfectly now.'
-    },
-    {
-      code: 'CS12345681',
-      userId: userMap['vikram@example.com'],
-      vehicleId: vRows[4].VehicleID,
-      centerId: shreeCenter.ServiceCenterID,
-      serviceId: sRows[0].ServiceID,
-      selected: JSON.stringify([{ name: 'General Service & Tune-Up', price: 1299 }]),
-      date: '2026-08-15',
-      slot: '11:00 AM',
-      status: 'Completed',
-      total: 1299.00,
-      notes: 'Periodic bike servicing.'
     }
   ];
 
@@ -330,12 +322,11 @@ async function resetAndSeedDatabase(db) {
     );
   }
 
-  // 6. Reviews for local centers
+  // 6. Reviews
   const sampleReviews = [
     [userMap['rohan@example.com'], shreeCenter.ServiceCenterID, 5, 'Best local garage in Kothrud! Transparent charges, no unnecessary replacements.'],
     [userMap['amit@example.com'], omSaiCenter.ServiceCenterID, 5, 'Very quick turnaround time and honest mechanic advice. Highly recommended for multi-brand cars.'],
-    [userMap['sneha@example.com'], royalCenter.ServiceCenterID, 4, 'Good experience. Neat job on AC cooling and foam wash.'],
-    [userMap['vikram@example.com'], shreeCenter.ServiceCenterID, 5, 'Friendly local technicians and reasonable labor rates compared to dealership showrooms.']
+    [userMap['sneha@example.com'], royalCenter.ServiceCenterID, 4, 'Good experience. Neat job on AC cooling and foam wash.']
   ];
 
   for (const r of sampleReviews) {
