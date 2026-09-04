@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { BookingProvider } from './context/BookingContext';
 import { Navbar } from './components/layout/Navbar';
 import { Footer } from './components/layout/Footer';
+import { ProtectedRoute } from './components/auth/ProtectedRoute';
 
 // Customer Pages
 import { SplashPage } from './pages/customer/SplashPage';
@@ -48,7 +49,7 @@ export function App() {
 
             <div className="flex-1">
               <Routes>
-                {/* Customer Experience Routes */}
+                {/* Public Discovery Routes */}
                 <Route path="/" element={<SplashPage />} />
                 <Route path="/onboarding" element={<OnboardingPage />} />
                 <Route path="/login" element={<LoginPage />} />
@@ -59,28 +60,135 @@ export function App() {
                 <Route path="/service-centers/:id" element={<ServiceCenterDetailPage />} />
                 <Route path="/select-services/:centerId" element={<SelectServicePage />} />
                 <Route path="/select-slot" element={<SelectDateTimeSlotPage />} />
-                <Route path="/booking-summary" element={<BookingSummaryPage />} />
-                <Route path="/payment" element={<PaymentPage />} />
-                <Route path="/booking-confirmation/:code" element={<BookingConfirmationPage />} />
-                <Route path="/my-bookings" element={<MyBookingsPage />} />
-                <Route path="/profile" element={<ProfilePage />} />
 
-                {/* Partner Experience Routes */}
+                {/* Customer Authenticated Protected Routes */}
+                <Route
+                  path="/booking-summary"
+                  element={
+                    <ProtectedRoute allowedRoles={['Customer']}>
+                      <BookingSummaryPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/payment"
+                  element={
+                    <ProtectedRoute allowedRoles={['Customer']}>
+                      <PaymentPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/booking-confirmation/:code"
+                  element={
+                    <ProtectedRoute allowedRoles={['Customer']}>
+                      <BookingConfirmationPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/my-bookings"
+                  element={
+                    <ProtectedRoute allowedRoles={['Customer']}>
+                      <MyBookingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute allowedRoles={['Customer']}>
+                      <ProfilePage />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* Partner Auth & Protected Portal Routes */}
                 <Route path="/partner/login" element={<PartnerLoginPage />} />
                 <Route path="/partner/register" element={<PartnerRegisterPage />} />
-                <Route path="/partner/dashboard" element={<PartnerDashboardPage />} />
-                <Route path="/partner/bookings" element={<PartnerBookingsPage />} />
-                <Route path="/partner/availability" element={<PartnerAvailabilityPage />} />
-                <Route path="/partner/services" element={<PartnerServicesPage />} />
-                <Route path="/partner/profile" element={<PartnerServicesPage />} />
+                <Route
+                  path="/partner/dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={['ServiceCenter']}>
+                      <PartnerDashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/partner/bookings"
+                  element={
+                    <ProtectedRoute allowedRoles={['ServiceCenter']}>
+                      <PartnerBookingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/partner/availability"
+                  element={
+                    <ProtectedRoute allowedRoles={['ServiceCenter']}>
+                      <PartnerAvailabilityPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/partner/services"
+                  element={
+                    <ProtectedRoute allowedRoles={['ServiceCenter']}>
+                      <PartnerServicesPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/partner/profile"
+                  element={
+                    <ProtectedRoute allowedRoles={['ServiceCenter']}>
+                      <PartnerServicesPage />
+                    </ProtectedRoute>
+                  }
+                />
 
-                {/* Admin Experience Routes */}
+                {/* Admin Auth & Protected Portal Routes */}
                 <Route path="/admin/login" element={<AdminLoginPage />} />
-                <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
-                <Route path="/admin/service-centers" element={<AdminServiceCentersPage />} />
-                <Route path="/admin/bookings" element={<AdminBookingsPage />} />
-                <Route path="/admin/users" element={<AdminUsersPage />} />
-                <Route path="/admin/reports" element={<AdminReportsPage />} />
+                <Route
+                  path="/admin/dashboard"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin']}>
+                      <AdminDashboardPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/service-centers"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin']}>
+                      <AdminServiceCentersPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/bookings"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin']}>
+                      <AdminBookingsPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/users"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin']}>
+                      <AdminUsersPage />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/admin/reports"
+                  element={
+                    <ProtectedRoute allowedRoles={['Admin']}>
+                      <AdminReportsPage />
+                    </ProtectedRoute>
+                  }
+                />
 
                 {/* Fallback */}
                 <Route path="*" element={<Navigate to="/" replace />} />
