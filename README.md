@@ -6,75 +6,75 @@ A full-stack Vehicle Service Center Management and Online Booking web applicatio
 
 ## 🚀 Quick Start (Running the Website)
 
-### 1. Database Setup (MySQL)
-The backend connects to MySQL on `localhost:3306` with user `root` (password: `root` or configurable in `backend/.env`).
-On server startup, it **automatically creates the database `carserv_db`**, sets up all 8 tables, and seeds initial demo data.
+### Prerequisites:
+* **Node.js** (v18+)
+* **MySQL Server** (Running on port `3306` with user `root` / password `root`)
 
-### 2. Start the Application
+---
 
-#### Step 1: Start Backend API (Port 5000)
+### 1-Command Startup (With Automatic Dependency Installer)
+Simply open the project folder in terminal or VS Code and run:
 ```bash
-cd backend
-npm install
 npm start
 ```
-*Backend runs at: `http://localhost:5000`*
+*(Or double-click `start_all.bat` in Windows File Explorer)*
 
-#### Step 2: Start Frontend Web App (Port 3000)
-```bash
-cd frontend
-npm install
-npm run dev
-```
-*Frontend runs at: `http://localhost:3000`*
-
----
-
-## 👥 Demo Login Accounts (1-Click Switchable)
-
-You can easily switch between roles using the **Demo Mode Toolbar** at the very top of the website or login manually with these credentials:
-
-| Role | Name | Email | Password | Access / Portal |
-| :--- | :--- | :--- | :--- | :--- |
-| **Customer** | Rohan Sharma | `rohan@example.com` | `password123` | Booking flow, My Bookings, Profile & Vehicles |
-| **Partner (Workshop)** | Shree Auto Service | `shreeauto@example.com` | `password123` | `/partner/dashboard` - Bookings, Availability, Services |
-| **Super Admin** | CarServ Master Admin | `admin@carserv.com` | `password123` | `/admin/dashboard` - KPIs, Centers, Reports, Users |
+The runner automatically:
+1. Detects and runs `npm install` for both Backend and Frontend if dependencies are missing.
+2. Automatically generates `backend/.env` if not present.
+3. Auto-creates MySQL database `carserv_db` and all 8 tables.
+4. Populates seed data for all 5 local garages, services, reviews, and users.
+5. Starts **Backend REST API** on `http://localhost:5000` and **Frontend React App** on `http://localhost:3000`.
 
 ---
 
-## 📱 Implemented Features & Screens (Mockup Matched)
+## 👥 Login Credentials & Portals
 
-### Customer Experience (All 15 Screens)
-1. **Splash Screen**: Brand identity, tagline ("Your Car, Our Care"), hero value propositions, quick action to book.
-2. **Onboarding Screen**: Carousel introduction to certified workshops and transparent pricing.
-3. **Login Screen**: Secure JWT login with email/mobile and password.
-4. **Register Screen**: Customer registration with validation.
-5. **Select Vehicle**: Two Wheeler (2W) vs Four Wheeler (4W) interactive selection.
-6. **Select Brand**: Filter centers by car/bike brands (Hyundai, Honda, Suzuki, Skoda, Toyota, Tata, Mahindra, Kia, Volkswagen, Royal Enfield, Yamaha, etc.) with search filter.
-7. **Service Center List**: Nearby workshop discovery, filters (`All`, `Branded`, `Non-Branded`, `Mobile Service`), distance, operating status, ratings.
-8. **Service Center Details**: Workshop photo, address, phone with click-to-call, working hours, customer reviews, list of services offered.
-9. **Select Service**: Interactive multi-select service menu with live total calculator (General Service, Oil Change, Brake Service, AC Service, Battery Check, Car Wash, Wheel Alignment).
-10. **Select Date & Time Slot**: Calendar date strip (Next 7 days) and time slot grid (09:00 AM to 06:00 PM).
-11. **Booking Summary**: Complete breakdown of workshop, vehicle details (brand, model, registration), itemized services, appointment time, and total billing.
-12. **Payment Screen**: Multi-option payment simulation (UPI, Google Pay, PhonePe, Credit/Debit Card, Net Banking, Wallets, Pay at Service Center).
-13. **Booking Confirmation**: Success checkmark animation, confetti effect, unique Booking ID (e.g. `CS12345678`), scheduled time, and print/download receipt.
-14. **My Bookings**: Filter by `Upcoming`, `Past / Completed`, `Cancelled`, view booking cards, cancel booking with reason modal, write review.
-15. **Profile & Vehicles**: User profile details, manage saved vehicles (Add/Remove vehicle modal), saved addresses, support, and logout.
+### 👤 1. Customer Account
+* **Login URL**: [http://localhost:3000/login](http://localhost:3000/login)
+* **Email**: `rohan@example.com`
+* **Password**: `password123`
+* **Features**: Discover 5 local garages, filter by 2W/4W & brands, select services, book date & time slots, simulated checkout, confirmation receipt, my bookings, and profile management (*Saved Addresses, Payment Methods, Notifications, 24/7 Support, Settings*).
 
-### Service Center Partner Portal (All 5 Screens)
-1. **Partner Login**: Workshop partner authentication with feature highlights.
-2. **Partner Dashboard**: Metric cards (Today's Bookings: 12, Upcoming: 8, Completed Today: 6, Total Earnings: ₹8,540), weekly booking trend graph, recent bookings table, quick status toggle (Open/Closed).
-3. **Bookings Manager**: Filter by status, search by customer name/phone/ID, update service status (`Upcoming` -> `In Progress` -> `Completed` / `Cancelled`).
-4. **Update Availability**: Workshop status switch, Select Working Hours (From - To), Lunch Break Time (From - To), Available Days checklist (Mon - Sun), save changes.
-5. **Profile & Services**: Service catalog management (Add New Service modal, edit price/duration, delete service), workshop contact details.
+---
 
-### Super Admin Dashboard (All 5 Screens)
-1. **Admin Login**: Secure super admin authentication.
-2. **Admin Dashboard**: System KPIs (Total Users: 1,245, Service Centers: 245, Total Bookings: 1,754, Total Revenue: ₹2,45,850), weekly booking volume graph, Top Service Centers leaderboard, Booking Status distribution donut chart.
-3. **Manage Service Centers**: Table of all service centers (Owner, City, Status, Phone, Type, Rating), Add New Service Center modal, toggle Active/Inactive, delete action.
-4. **Manage Bookings**: Global booking ledger with search, date filter, status filter, and inspect record modal.
-5. **Reports & Analytics**: Financial revenue charts, booking performance metrics, service popularity breakdown, printable summary.
-6. **Manage Users**: Registered customer and partner accounts, vehicle counts, booking history.
+### 🏢 2. All 5 Local Service Center Partner Accounts
+* **Login URL**: [http://localhost:3000/partner/login](http://localhost:3000/partner/login)
+
+| # | Service Center Name | Location | Partner Email | Password |
+| :-: | :--- | :--- | :--- | :--- |
+| **1** | **Shree Auto Service & Garage** | Kothrud Industrial Estate, Pune | `shreeauto@example.com` | `password123` |
+| **2** | **Om Sai Multi-Car Care & Auto Garage** | Baner-Pashan Link Rd, Pune | `omsai@example.com` | `password123` |
+| **3** | **Royal Motors & Local Garage Works** | Wakad Flyover Chowk, Pune | `royalmotors@example.com` | `password123` |
+| **4** | **Ganesh Auto Repairs & Service Point** | Karve Nagar, Pune | `ganeshauto@example.com` | `password123` |
+| **5** | **QuickFix Local Mobile Garage (Doorstep)** | On-Demand Mobile Van, Pune | `quickfix@example.com` | `password123` |
+
+* **Partner Features**: Real-time customer bookings manager, update service status (*Upcoming → In Progress → Completed / Cancelled*), working hours & lunch break scheduler, and service catalog rate card.
+
+---
+
+### 🛡️ 3. Super Admin Account
+* **Login URL**: [http://localhost:3000/admin/login](http://localhost:3000/admin/login)
+* **Email**: `admin@carserv.com`
+* **Password**: `password123`
+* **Features**: System KPI metrics, revenue charts, service center management (add/toggle/delete), global booking audit ledger, registered users directory, and printable analytics.
+
+---
+
+## 🛡️ Smart Booking Features & Business Logic
+
+1. **Past Date Prevention**:
+   * Calendar strictly starts from **Today** onwards. Booking past dates is blocked in frontend and backend.
+2. **Real-Time Passed Time Slot Lock**:
+   * On Today's date, morning/past hours are automatically greyed out with a `PASSED` badge and disabled from booking.
+3. **Double-Booking Slot Collision Lock**:
+   * If a customer books a specific time slot at a workshop, that slot is instantly marked as **`🔒 BOOKED`** for all other users.
+4. **Interactive Customer Profile**:
+   * Manage multiple vehicles (Cars & Bikes).
+   * Save & manage delivery addresses (Home / Office).
+   * Save UPI IDs and Cards.
+   * Customize WhatsApp, SMS, and Email alert preferences.
+   * 24/7 Helpdesk with direct toll-free call, email, and support ticket submission.
 
 ---
 
@@ -93,7 +93,7 @@ You can easily switch between roles using the **Demo Mode Toolbar** at the very 
 
 ---
 
-## 💻 Tech Stack Summary
-- **Frontend**: HTML5, CSS3, JavaScript (ES6+), React 18, Vite 5, Tailwind CSS, Lucide React icons, Canvas Confetti, React Router v6, Axios
-- **Backend**: Node.js, Express.js, JWT, bcryptjs, CORS, Dotenv
-- **Database**: MySQL 8.0 / mysql2
+## 💻 Tech Stack
+* **Frontend**: React 18, Vite 5, Tailwind CSS, Lucide React icons, Canvas Confetti, React Router v6, Axios
+* **Backend**: Node.js, Express.js, JWT, bcryptjs, CORS, Dotenv
+* **Database**: MySQL 8.0 / mysql2
