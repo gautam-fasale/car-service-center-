@@ -1,0 +1,313 @@
+=== PARAGRAPHS ===
+Vehicle Service Center Management System
+Introduction
+The Vehicle Service Center Management System is a web-based application developed to simplify and digitalize the process of vehicle servicing. In traditional systems, users need to visit service centers physically or make bookings through calls, which can be time-consuming and inefficient. This website provides a convenient online platform where users can access services anytime, select their vehicle, choose a service center, and book a suitable time slot.
+The system is designed with a structured and user-friendly web interface, allowing smooth navigation across different pages such as registration, login, service selection, and booking. It connects customers with authorized service centers and local garages, making it easier to compare options and schedule services without hassle. Additionally, service center owners and administrators can manage services, availability, and bookings through the system.
+Overall, the website improves efficiency, reduces manual effort, and provides a reliable and accessible solution for managing vehicle servicing online.
+Project Scope
+The Vehicle Service Center Management System is a web-based platform developed to simplify and modernize the process of vehicle servicing. It enables users to connect with nearby authorized service centers and local garages through an online interface. The system allows users to easily register, explore service options, and book appointments without the need for physical visits, saving both time and effort.
+Scope of the Project
+This project focuses on creating a user-friendly and efficient system where vehicle owners can manage their servicing needs digitally. Users can create an account, select their vehicle type (two-wheeler or four-wheeler), choose a preferred brand or local service center, and book an available time slot.
+Functionalities / Modules
+Main Module: Vehicle Service Booking & Management
+1. User Authentication – Users can securely register and log in to access the system.
+2. Vehicle & Service Selection – Users can choose vehicle type and preferred service center.
+3. Service Center Support – View nearby centers and contact them.
+Main Module: Service Center Owner Management
+1. Service Center Registration – Register and manage service center.
+2. Service & Slot Management – Add/update services and time slots.
+3. Booking Management – Manage bookings efficiently.
+Main Module: Admin Management
+1. User & Service Center Management – Manage users and service centers.
+2. Booking Management – Monitor all bookings.
+3. System Monitoring – Monitor system performance.
+Roles and Their Interactions
+Customer/User
+Register and log in
+Select vehicle and service center
+Book slots
+Service Center Owner
+Manage profile
+Manage services and slots
+Handle bookings
+Admin
+Manage users and centers
+Monitor bookings
+Oversee system
+Functional Scope
+Includes user login, vehicle selection, service center listing, slot booking, and booking management.
+Technical Scope
+Frontend: HTML, CSS, JavaScript, Node Js.
+Database: MySQL
+Analysis and Design
+Entity Relationship Diagram (ERD):
+Use Case Diagram :
+Table Structure / Data Dictionary :
+Table : 
+Table Structure / Data Dictionary
+User Table
+Field
+Type
+Key
+Description
+UserID
+INT
+PK
+Unique user ID
+FullName
+VARCHAR(100)
+Customer name
+Mobile
+VARCHAR(15)
+UQ
+Mobile
+Email
+VARCHAR(100)
+UQ
+Email
+Password
+VARCHAR(255)
+Password
+UserType
+ENUM
+Customer/Admin/ServiceCenter
+CreatedAt
+DATETIME
+Created date
+Vehicle Table
+Field
+Type
+Key
+Description
+VehicleID
+INT
+PK
+Vehicle ID
+UserID
+INT
+FK
+Owner
+VehicleType
+ENUM
+2W/4W
+Brand
+VARCHAR(50)
+Brand
+Model
+VARCHAR(50)
+Model
+RegistrationNo
+VARCHAR(20)
+UQ
+Registration
+Year
+YEAR
+Manufacture year
+Service Center Table
+Field
+Type
+Key
+Description
+ServiceCenterID
+INT
+PK
+Center
+Name
+VARCHAR(100)
+Name
+Type
+ENUM
+Branded/Non
+Address
+TEXT
+Address
+Phone
+VARCHAR(15)
+Phone
+OpenStatus
+BOOLEAN
+Open/Busy
+Service Table
+Field
+Type
+Key
+Description
+ServiceID
+INT
+PK
+Service
+ServiceCenterID
+INT
+FK
+Center
+ServiceName
+VARCHAR(100)
+Name
+Price
+DECIMAL
+Price
+Duration
+INT
+Minutes
+Booking Table
+Field
+Type
+Key
+Description
+BookingID
+INT
+PK
+Booking
+UserID
+INT
+FK
+User
+VehicleID
+INT
+FK
+Vehicle
+ServiceCenterID
+INT
+FK
+Center
+ServiceID
+INT
+FK
+Service
+BookingDate
+DATE
+Date
+TimeSlot
+TIME
+Time
+Status
+ENUM
+Status
+TotalAmount
+DECIMAL
+Bill
+Time Slot Table
+Field
+Type
+Key
+Description
+SlotID
+INT
+PK
+Slot
+ServiceCenterID
+INT
+FK
+Center
+SlotDate
+DATE
+Date
+StartTime
+TIME
+Start
+EndTime
+TIME
+End
+Status
+ENUM
+Available/Booked
+Review Table
+Field
+Type
+Key
+Description
+ReviewID
+INT
+PK
+Review
+UserID
+INT
+FK
+User
+ServiceCenterID
+INT
+FK
+Center
+Rating
+INT
+1-5
+Comment
+TEXT
+Feedback
+ReviewDate
+DATETIME
+Date
+
+=== TABLES ===
+Field | Type | Key | Description
+UserID | INT | PK | Unique user ID
+FullName | VARCHAR(100) |  | Customer name
+Mobile | VARCHAR(15) | UQ | Mobile
+Email | VARCHAR(100) | UQ | Email
+Password | VARCHAR(255) |  | Password
+UserType | ENUM |  | Customer/Admin/ServiceCenter
+CreatedAt | DATETIME |  | Created date
+
+---
+
+Field | Type | Key | Description
+VehicleID | INT | PK | Vehicle ID
+UserID | INT | FK | Owner
+VehicleType | ENUM |  | 2W/4W
+Brand | VARCHAR(50) |  | Brand
+Model | VARCHAR(50) |  | Model
+RegistrationNo | VARCHAR(20) | UQ | Registration
+Year | YEAR |  | Manufacture year
+ |  |  | 
+
+---
+
+Field | Type | Key | Description
+ServiceCenterID | INT | PK | Center
+Name | VARCHAR(100) |  | Name
+Type | ENUM |  | Branded/Non
+Address | TEXT |  | Address
+Phone | VARCHAR(15) |  | Phone
+OpenStatus | BOOLEAN |  | Open/Busy
+
+---
+
+Field | Type | Key | Description
+ServiceID | INT | PK | Service
+ServiceCenterID | INT | FK | Center
+ServiceName | VARCHAR(100) |  | Name
+Price | DECIMAL |  | Price
+Duration | INT |  | Minutes
+
+---
+
+Field | Type | Key | Description
+BookingID | INT | PK | Booking
+UserID | INT | FK | User
+VehicleID | INT | FK | Vehicle
+ServiceCenterID | INT | FK | Center
+ServiceID | INT | FK | Service
+BookingDate | DATE |  | Date
+TimeSlot | TIME |  | Time
+Status | ENUM |  | Status
+TotalAmount | DECIMAL |  | Bill
+
+---
+
+Field | Type | Key | Description
+SlotID | INT | PK | Slot
+ServiceCenterID | INT | FK | Center
+SlotDate | DATE |  | Date
+StartTime | TIME |  | Start
+EndTime | TIME |  | End
+Status | ENUM |  | Available/Booked
+
+---
+
+Field | Type | Key | Description
+ReviewID | INT | PK | Review
+UserID | INT | FK | User
+ServiceCenterID | INT | FK | Center
+Rating | INT |  | 1-5
+Comment | TEXT |  | Feedback
+ReviewDate | DATETIME |  | Date
