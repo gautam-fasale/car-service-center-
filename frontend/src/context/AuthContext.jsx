@@ -3,24 +3,22 @@ import axios from 'axios';
 
 const AuthContext = createContext();
 
-export const useAuth = () => useContext(AuthContext);
-
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('carserv_token') || null);
   const [loading, setLoading] = useState(true);
 
-  // Set default axios headers
+  // Set default axios header
   if (token) {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
   } else {
     delete axios.defaults.headers.common['Authorization'];
   }
 
-  // Load current user profile if token exists
   useEffect(() => {
     const fetchMe = async () => {
       if (!token) {
+        setUser(null);
         setLoading(false);
         return;
       }
@@ -42,39 +40,55 @@ export const AuthProvider = ({ children }) => {
   }, [token]);
 
   const login = async (identifier, password, userType) => {
-    const res = await axios.post('/api/auth/login', { identifier, password, userType });
-    if (res.data.success) {
-      setToken(res.data.token);
-      setUser(res.data.user);
-      localStorage.setItem('carserv_token', res.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-      return res.data;
+    try {
+      const cleanId = (identifier || '').trim();
+      const cleanPass = (password || '').trim();
+      const res = await axios.post('/api/auth/login', { identifier: cleanId, password: cleanPass, userType });
+      if (res.data.success) {
+        setToken(res.data.token);
+        setUser(res.data.user);
+        localStorage.setItem('carserv_token', res.data.token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+        return res.data;
+      }
+      throw new Error(res.data.message || 'Login failed');
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Invalid email or password';
+      throw new Error(msg);
     }
-    throw new Error(res.data.message || 'Login failed');
   };
 
   const register = async (payload) => {
-    const res = await axios.post('/api/auth/register', payload);
-    if (res.data.success) {
-      setToken(res.data.token);
-      setUser(res.data.user);
-      localStorage.setItem('carserv_token', res.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-      return res.data;
+    try {
+      const res = await axios.post('/api/auth/register', payload);
+      if (res.data.success) {
+        setToken(res.data.token);
+        setUser(res.data.user);
+        localStorage.setItem('carserv_token', res.data.token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+        return res.data;
+      }
+      throw new Error(res.data.message || 'Registration failed');
+    } catch (err) {
+      const msg = err.response?.data?.message || err.message || 'Registration failed';
+      throw new Error(msg);
     }
-    throw new Error(res.data.message || 'Registration failed');
   };
 
   const loginAsDemo = async (role = 'Customer') => {
-    const res = await axios.post('/api/auth/demo-login', { role });
-    if (res.data.success) {
-      setToken(res.data.token);
-      setUser(res.data.user);
-      localStorage.setItem('carserv_token', res.data.token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-      return res.data.user;
+    try {
+      const res = await axios.post('/api/auth/demo-login', { role });
+      if (res.data.success) {
+        setToken(res.data.token);
+        setUser(res.data.user);
+        localStorage.setItem('carserv_token', res.data.token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+        return res.data.user;
+      }
+    } catch (err) {
+      console.error('Demo login error:', err);
     }
-    throw new Error(res.data.message || 'Demo login failed');
+    return null;
   };
 
   const logout = () => {
@@ -90,17 +104,16 @@ export const AuthProvider = ({ children }) => {
         user,
         token,
         loading,
+        isAuthenticated: !!token && !!user,
         login,
         register,
         loginAsDemo,
-        logout,
-        isAuthenticated: !!token && !!user,
-        isCustomer: user?.userType === 'Customer',
-        isPartner: user?.userType === 'ServiceCenter',
-        isAdmin: user?.userType === 'Admin'
+        logout
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
+export const useAuth = () => useContext(AuthContext);
